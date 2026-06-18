@@ -304,8 +304,12 @@ function saveData() {
 }
 
 function updateTotals() {
-  const totalSales = sales.reduce((a,b)=>a+b.amount,0) || 0.0;
+  const totalSales = sales.reduce((a,b)=>a+b.total,0) || 0.0;
   const totalExpenses = expenses.reduce((a,b)=>a+b.amount,0) || 0.0;
+  console.log(sales)
+  console.log(totalSales)
+  console.log(expenses)
+  console.log(totalExpenses)
   document.getElementById('sales-today').textContent = totalSales.toFixed(2);
   document.getElementById('exp-today').textContent = totalExpenses.toFixed(2);
   document.getElementById('net-profit').textContent = (totalSales - totalExpenses).toFixed(2);
@@ -326,8 +330,8 @@ function addTransaction(type, date, category, desc, amount) {
 function refreshTransactions() {
   const tbody = document.querySelector('#transactionTable tbody');
   tbody.innerHTML = '';
-  sales.forEach(s => addTransaction('Sale', s.date, s.name, '-', s.amount));
-  expenses.forEach(e => addTransaction('Expense', e.date, e.cat, e.desc, e.amount));
+  sales.forEach(s => addTransaction('Sale', s.date, s.name, '-', s.total));
+  expenses.forEach(e => addTransaction('Expense', e.date, e.category, e.description, e.amount));
 }
 
 document.getElementById('salePrice').addEventListener('input', ()=>{
