@@ -226,12 +226,53 @@ th {
     </div>
   </section>
 </main>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Database simulation using localStorage
-let sales = JSON.parse(localStorage.getItem('sales')) || [];
-let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+
+const supabaseUrl = "https://cafjqbmfdjklonggyynw.supabase.co";
+const supabaseKey = "sb_publishable_axALqHNlyBLbaZBrvTWffA_VZdAx2PJ";
+
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+let sales = [];
+let expenses = [];
+
+async function login(email) {
+  await supabaseClient.auth.signInWithOtp({ email });
+}
+
+function updateTotal(quantityDOMElement, priceDOMElement, totalDOMElement) {
+  const qty = parseInt(quantityDOMElement.value) || 0.0;
+  const price = parseFloat(priceDOMElement.value) || 0.0;
+  const total = qty * price;
+
+  totalDOMElement.value = (total || 0.0).toFixed(2);
+}
+
+const qtyEl = document.getElementById('saleQty');
+const priceEl = document.getElementById('salePrice');
+const totalEl = document.getElementById('saleTotal');
+
+
+qtyEl.addEventListener('input', () => updateTotal(qtyEl, priceEl, totalEl));
+priceEl.addEventListener('input', () => updateTotal(qtyEl, priceEl, totalEl));
+
+async function loadData() {
+
+  const { data: salesData } = await supabaseClient
+    .from("sales")
+    .select("*")
+
+  const { data: expenseData } = await supabaseClient
+    .from("expenses")
+    .select("*")
+
+  sales = salesData || [];
+  expenses = expenseData || [];
+
+  refreshTransactions();
+  updateTotals();
+}
 
 const ctx = document.getElementById('salesChart').getContext('2d');
 const chart = new Chart(ctx, {
@@ -280,33 +321,49 @@ function refreshTransactions() {
 }
 
 document.getElementById('salePrice').addEventListener('input', ()=>{
-  const qty = parseFloat(document.getElementById('saleQty').value)||0;
+  const qty = parseInt(document.getElementById('saleQty').value)||0;
   const price = parseFloat(document.getElementById('salePrice').value)||0;
   document.getElementById('saleTotal').value = (qty*price).toFixed(2);
 });
 
-document.getElementById('salesForm').addEventListener('submit', e=>{
+document.getElementById('salesForm').addEventListener('submit', async e=>{
   e.preventDefault();
   const date = saleDate.value;
   const name = saleName.value;
-  const qty = parseFloat(saleQty.value);
+  const quantity = parseInt(saleQty.value);
   const price = parseFloat(salePrice.value);
-  const total = qty*price;
-  sales.push({date, name, amount: total});
-  saveData();
-  refreshTransactions();
-  updateTotals();
+  const total = quantity*price;
+
+  const res = await supabaseClient.from("sales").insert({
+    date,
+    name,
+    quantity,
+    price,
+    total
+  });
+  console.log(res)
+
+loadData();
+  // refreshTransactions();
+  // updateTotals();
   e.target.reset();
 });
 
-document.getElementById('expenseForm').addEventListener('submit', e=>{
+document.getElementById('expenseForm').addEventListener('submit', async e=>{
   e.preventDefault();
   const date = expDate.value;
-  const cat = expCategory.value;
-  const desc = expDesc.value;
+  const category = expCategory.value;
+  const description = expDesc.value;
   const amount = parseFloat(expAmount.value);
-  expenses.push({date, cat, desc, amount});
-  saveData();
+
+  await supabaseClient.from("expenses").insert({
+    date,
+    category,
+    description,
+    amount,
+  });
+
+loadData();
   refreshTransactions();
   updateTotals();
   e.target.reset();
@@ -319,7 +376,6 @@ document.getElementById('search').addEventListener('input', e=>{
     row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
   });
 });
-
 refreshTransactions();
 updateTotals();
 </script>
