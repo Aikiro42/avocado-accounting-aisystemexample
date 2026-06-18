@@ -249,6 +249,16 @@ function updateTotal(quantityDOMElement, priceDOMElement, totalDOMElement) {
   totalDOMElement.value = (total || 0.0).toFixed(2);
 }
 
+function updateReport() {
+  const totalSales = sales.reduce((sum, s) => sum + (s.amount || 0), 0);
+  const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+  const profit = totalSales - totalExpenses;
+
+  document.getElementById('reportSales').textContent = totalSales.toFixed(2);
+  document.getElementById('reportExpenses').textContent = totalExpenses.toFixed(2);
+  document.getElementById('reportProfit').textContent = profit.toFixed(2);
+}
+
 const qtyEl = document.getElementById('saleQty');
 const priceEl = document.getElementById('salePrice');
 const totalEl = document.getElementById('saleTotal');
@@ -294,8 +304,8 @@ function saveData() {
 }
 
 function updateTotals() {
-  const totalSales = sales.reduce((a,b)=>a+b.amount,0);
-  const totalExpenses = expenses.reduce((a,b)=>a+b.amount,0);
+  const totalSales = sales.reduce((a,b)=>a+b.amount,0) || 0.0;
+  const totalExpenses = expenses.reduce((a,b)=>a+b.amount,0) || 0.0;
   document.getElementById('sales-today').textContent = totalSales.toFixed(2);
   document.getElementById('exp-today').textContent = totalExpenses.toFixed(2);
   document.getElementById('net-profit').textContent = (totalSales - totalExpenses).toFixed(2);
@@ -309,7 +319,7 @@ function updateTotals() {
 function addTransaction(type, date, category, desc, amount) {
   const table = document.querySelector('#transactionTable tbody');
   const row = document.createElement('tr');
-  row.innerHTML = `<td>${date}</td><td>${type}</td><td>${category}</td><td>${desc}</td><td>$${amount.toFixed(2)}</td>`;
+  row.innerHTML = `<td>${date}</td><td>${type}</td><td>${category}</td><td>${desc}</td><td>$${(amount || 0.0).toFixed(2)}</td>`;
   table.appendChild(row);
 }
 
@@ -323,7 +333,7 @@ function refreshTransactions() {
 document.getElementById('salePrice').addEventListener('input', ()=>{
   const qty = parseInt(document.getElementById('saleQty').value)||0;
   const price = parseFloat(document.getElementById('salePrice').value)||0;
-  document.getElementById('saleTotal').value = (qty*price).toFixed(2);
+  document.getElementById('saleTotal').value = (qty*price || 0.0).toFixed(2);
 });
 
 document.getElementById('salesForm').addEventListener('submit', async e=>{
@@ -344,8 +354,6 @@ document.getElementById('salesForm').addEventListener('submit', async e=>{
   console.log(res)
 
 loadData();
-  // refreshTransactions();
-  // updateTotals();
   e.target.reset();
 });
 
@@ -363,7 +371,7 @@ document.getElementById('expenseForm').addEventListener('submit', async e=>{
     amount,
   });
 
-loadData();
+  loadData();
   refreshTransactions();
   updateTotals();
   e.target.reset();
@@ -376,6 +384,7 @@ document.getElementById('search').addEventListener('input', e=>{
     row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
   });
 });
+loadData();
 refreshTransactions();
 updateTotals();
 </script>
